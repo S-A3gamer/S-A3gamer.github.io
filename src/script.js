@@ -255,6 +255,7 @@ function preload(){
     this.load.audio('temp_swap', 'assets/mp3/temp_swap.mp3');
     this.load.audio('boost', 'assets/mp3/boost.mp3');
     this.load.audio('poof', 'assets/mp3/poof.mp3');
+    this.load.audio('goatScream', 'assets/mp3/goatscream.mp3');
 
 
 }
@@ -286,6 +287,7 @@ function create(){
     this.sound.add('disappear_sfx');
     this.sound.add('pity');
     this.sound.add('pipe');
+    this.sound.add('goatScream');
     this.Swap = this.sound.add('swap');
     this.tempSwap = this.sound.add('temp_swap');
 
@@ -4468,7 +4470,12 @@ function hitBomb(player, bomb){
         bomb.anims.play('explode_final', true);
         var PITY = Phaser.Math.Between(1, 3);
         if (PITY == 3){
-            this.sound.play('pity');
+            if(Char3 || CheckChar3){
+                this.sound.play('goatScream');
+            }
+            else{
+                this.sound.play('pity');
+            }
             this.sound.play('hitbomb_sfx');  
         }
         else if (PITY == 2){
