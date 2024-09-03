@@ -27,6 +27,7 @@ var Metalmusic = false;
 var Ghostmusic = false;
 var Flymusic = false;
 var Starmusic = false;
+var Shield = false;
 var Noon = false;
 var Night = false;
 var Rain = false;
@@ -47,7 +48,10 @@ var CheckChar2 = false;
 var CheckChar3 = false;
 
 var Boost = false;
+var SillyJump = false;
 var Cooldown = false;
+var shieldCheck = false;
+var shieldCooldown = false;
 
 
 var game = new Phaser.Game(config);
@@ -92,10 +96,13 @@ function preload(){
     this.load.spritesheet('flystic_box', 'assets/misc/fly/fly_block.png',{frameWidth: 30, frameHeight: 30});
     this.load.spritesheet('flystic_box_squish', 'assets/misc/fly/fly_block_squish.png',{frameWidth: 30, frameHeight: 30});
     this.load.spritesheet('boost_cloud', 'assets/misc/fly/boost_cloud.png',{frameWidth: 41, frameHeight: 30});
-    this.load.spritesheet('char_change', 'assets/misc/chaotix.png',{frameWidth: 30, frameHeight: 30});
+    this.load.spritesheet('char_change', 'assets/misc/chaotix.png',{frameWidth: 32, frameHeight: 42});
+    this.load.spritesheet('shield', 'assets/misc/shield/shield.png',{frameWidth: 52, frameHeight: 50});
+    this.load.spritesheet('monitor_shield', 'assets/misc/shield/shield_monitor.png',{frameWidth: 32, frameHeight: 42});
 
 
     this.load.spritesheet('dude', 'assets/hoots/dude_up.png', {frameWidth: 34, frameHeight: 51});
+    this.load.spritesheet('dude_hurt', 'assets/hoots/dude_hurt.png', {frameWidth: 40, frameHeight: 44});
     this.load.spritesheet('dude_death', 'assets/hoots/dude_death.png', {frameWidth: 50, frameHeight: 54});
     this.load.spritesheet('jump_left', 'assets/hoots/jump_left.png', {frameWidth: 30, frameHeight: 54});
     this.load.spritesheet('jump_right', 'assets/hoots/jump_right.png', {frameWidth: 30, frameHeight: 54});
@@ -137,6 +144,7 @@ function preload(){
 
 
     this.load.spritesheet('goobert', 'assets/goob/dude_up.png', {frameWidth: 32, frameHeight: 41});
+    this.load.spritesheet('goobert_hurt', 'assets/goob/dude_hurt.png', {frameWidth: 40, frameHeight: 33});
     this.load.spritesheet('goobert_death', 'assets/goob/dude_death.png', {frameWidth: 50, frameHeight: 54});
     this.load.spritesheet('goobert_jump_left', 'assets/goob/jump_left.png', {frameWidth: 22, frameHeight: 44});
     this.load.spritesheet('goobert_jump_right', 'assets/goob/jump_right.png', {frameWidth: 22, frameHeight: 44});
@@ -177,6 +185,7 @@ function preload(){
 
 
     this.load.spritesheet('ende', 'assets/ende/dude_up.png', {frameWidth: 36, frameHeight: 42});
+    this.load.spritesheet('ende_hurt', 'assets/ende/dude_hurt.png', {frameWidth: 36, frameHeight: 37});
     this.load.spritesheet('ende_death', 'assets/ende/dude_death.png', {frameWidth: 38, frameHeight: 44});
     this.load.spritesheet('ende_jump_fall_left', 'assets/ende/jump_fall_left.png', {frameWidth: 35, frameHeight: 42});
     this.load.spritesheet('ende_jump_fall_right', 'assets/ende/jump_fall_right.png', {frameWidth: 35, frameHeight: 42});
@@ -256,6 +265,7 @@ function preload(){
     this.load.audio('boost', 'assets/mp3/boost.mp3');
     this.load.audio('poof', 'assets/mp3/poof.mp3');
     this.load.audio('goatScream', 'assets/mp3/goatscream.mp3');
+    this.load.audio('shield', 'assets/mp3/shield.mp3');
 
 
 }
@@ -265,6 +275,7 @@ function create(){
     keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
     keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+    keyP = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
 
     key1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
     key2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
@@ -288,6 +299,7 @@ function create(){
     this.sound.add('pity');
     this.sound.add('pipe');
     this.sound.add('goatScream');
+    this.sound.add('shield');
     this.Swap = this.sound.add('swap');
     this.tempSwap = this.sound.add('temp_swap');
 
@@ -574,6 +586,19 @@ function create(){
 
         key: 'turn',
         frames: [{key: 'dude', frame: 4}],
+        frameRate: 20,
+    });
+
+    this.anims.create({
+
+        key: 'hurt_left',
+        frames: [{key: 'dude_hurt', frame: 0}],
+        frameRate: 20,
+    });
+    this.anims.create({
+
+        key: 'hurt_right',
+        frames: [{key: 'dude_hurt', frame: 1}],
         frameRate: 20,
     });
     this.anims.create({
@@ -913,6 +938,18 @@ function create(){
     });
     this.anims.create({
 
+        key: 'goob_hurt_left',
+        frames: [{key: 'goobert_hurt', frame: 0}],
+        frameRate: 20,
+    });
+    this.anims.create({
+
+        key: 'goob_hurt_right',
+        frames: [{key: 'goobert_hurt', frame: 1}],
+        frameRate: 20,
+    });
+    this.anims.create({
+
         key: 'goob_crouch',
         frames: [{key: 'goobert_crouch', frame: 4}],
         frameRate: 20,
@@ -1237,7 +1274,18 @@ this.anims.create({
     frames: [{key: 'ende', frame: 4}],
     frameRate: 20,
 });
+this.anims.create({
 
+    key: 'ende_hurt_left',
+    frames: [{key: 'ende_hurt', frame: 0}],
+    frameRate: 20,
+});
+this.anims.create({
+
+    key: 'ende_hurt_right',
+    frames: [{key: 'ende_hurt', frame: 1}],
+    frameRate: 20,
+});
 this.anims.create({
 
     key: 'ende_jumpfront',
@@ -1627,6 +1675,19 @@ this.anims.create({
         setXY: {x: 12, y:0, stepX: 70}
     });
 
+    // Shield
+
+    this.shield = this.add.sprite(0, 0, 'shield').setVisible(false);
+
+    this.anims.create({
+
+        key: 'shield_movement',
+        frames: this.anims.generateFrameNumbers('shield', {start: 0, end: 12}),
+        frameRate: 20,
+        repeat: -1,
+
+    });
+
     //Star
     this.anims.create({
 
@@ -1672,8 +1733,16 @@ this.anims.create({
     this.anims.create({
 
         key: 'chaotixbox',
-        frames: this.anims.generateFrameNumbers('char_change', {start: 0, end: 5}),
-        frameRate: 20,
+        frames: this.anims.generateFrameNumbers('char_change', {start: 0, end: 1}),
+        frameRate: 50,
+        repeat: -1
+    });
+
+    this.anims.create({
+
+        key: 'monitor_shield_anim',
+        frames: this.anims.generateFrameNumbers('monitor_shield', {start: 0, end: 1}),
+        frameRate: 50,
         repeat: -1
     });
 
@@ -1827,17 +1896,20 @@ this.anims.create({
 
     this.physics.add.collider(player, bombs, hitBomb, null, this);
 
+
     metalboxes = this.physics.add.staticGroup();
 
         this.physics.add.collider(player, metalboxes, (player, _metalboxes) =>
             {
-                if ((player.body.touching.up && _metalboxes.body.touching.down || player.body.touching.down && cursors.down.isDown) && !gameOver)
+                if ((player.body.touching.up && _metalboxes.body.touching.down || player.body.onFloor() && cursors.down.isDown) && !gameOver)
                     {
                         this.noontheme.pause();
                         this.noontheme.intro.pause();
                         this.nighttheme.pause();
                         this.nighttheme.intro.pause();
                         this.sound.play('block_break');
+                        Shield = false
+                        shieldCheck = true
                         if (!Flymusic){
                             if(!Starmusic){
                             this.metalTheme.intro.play();
@@ -1865,6 +1937,7 @@ this.anims.create({
                                 };
                                 player.clearTint();
                                 Metalmusic = false;
+
                                 if(!Flymusic){
                                     if(!Starmusic){
                                     this.MetalFlyTheme.pause();
@@ -1884,7 +1957,12 @@ this.anims.create({
                                     this.flyTheme.intro.play();
                                     };
                                     player.body.setGravityY(100);
-                                }                       
+                                }
+                                
+                                if(!Starmusic && !Metalmusic && shieldCheck){
+                                    Shield = true
+                                    shieldCheck = false
+                                }
                             });
                     };
     
@@ -1896,7 +1974,7 @@ this.anims.create({
 
     this.physics.add.collider(player, ghostboxes, (player, _ghostboxes) =>
         {
-            if ((player.body.touching.up && _ghostboxes.body.touching.down || player.body.touching.down && cursors.down.isDown) && !gameOver)
+            if ((player.body.touching.up && _ghostboxes.body.touching.down || player.body.onFloor() && cursors.down.isDown) && !gameOver)
                 {
                     this.sound.play('block_break');
                     this.squishG.copyPosition(_ghostboxes).play('ghosticblock_squish');
@@ -1933,7 +2011,7 @@ this.anims.create({
 
     this.physics.add.collider(player, flyboxes, (player, _flyboxes) =>
         {
-            if ((player.body.touching.up && _flyboxes.body.touching.down || player.body.touching.down && cursors.down.isDown) && !gameOver)
+            if ((player.body.touching.up && _flyboxes.body.touching.down || player.body.onFloor() && cursors.down.isDown) && !gameOver)
                 {
                     this.noontheme.pause();
                     this.noontheme.intro.pause();
@@ -1996,7 +2074,7 @@ starboxes = this.physics.add.staticGroup();
 
 this.physics.add.collider(player, starboxes, (player, _starboxes) =>
     {
-        if ((player.body.touching.up && _starboxes.body.touching.down || player.body.touching.down && cursors.down.isDown) && !gameOver)
+        if ((player.body.touching.up && _starboxes.body.touching.down || player.body.onFloor() && cursors.down.isDown) && !gameOver)
             {
                 this.noontheme.pause();
                 this.noontheme.intro.pause();
@@ -2011,6 +2089,8 @@ this.physics.add.collider(player, starboxes, (player, _starboxes) =>
                 invStars.setVisible(true);
                 invStars.anims.play('stars_effect');
                 Starmusic = true;
+                Shield = false
+                shieldCheck = true
                 if(!Metalmusic){
                 };
                 this.squishS.copyPosition(_starboxes).play('starsticblock_squish');
@@ -2055,7 +2135,11 @@ this.physics.add.collider(player, starboxes, (player, _starboxes) =>
                             this.starMFTheme.pause();
                             this.metalTheme.intro.play();
                         };  
-                                         
+                    
+                        if(!Starmusic && !Metalmusic && shieldCheck){
+                            Shield = true
+                            shieldCheck = false
+                        }
                     });
             };
 
@@ -2068,8 +2152,9 @@ chaotixboxes = this.physics.add.staticGroup();
 
 this.physics.add.collider(player, chaotixboxes, (player, _chaotixboxes) =>
     {
-        if ((player.body.touching.up && _chaotixboxes.body.touching.down || player.body.touching.down && cursors.down.isDown) && !gameOver)
+        if ((player.body.touching.up && _chaotixboxes.body.touching.down || player.body.onFloor() && cursors.down.isDown || Boost) && !gameOver)
             {
+                this.cameras.main.shake(200, 0.002);
                 this.sound.play('poof');
                 this.flyBoost.copyPosition(_chaotixboxes).play('fly_boost');
                 _chaotixboxes.destroy();
@@ -2120,6 +2205,9 @@ this.physics.add.collider(player, chaotixboxes, (player, _chaotixboxes) =>
                     {
                         this.flyBoost.copyPosition(player).play('fly_boost')
                         this.tempSwap.play()
+                        if(!player.body.onFloor()){
+                            player.setVelocityY(-100)
+                        }
 
                         if(CheckChar1){
                             CheckChar1 = false
@@ -2149,6 +2237,29 @@ this.physics.add.collider(player, chaotixboxes, (player, _chaotixboxes) =>
     });
 this.physics.add.collider(bombs, chaotixboxes, null, () => { return Ghostmusic == false});
 this.physics.add.collider(stars, chaotixboxes, null, () => { return Ghostmusic == false});
+
+
+shieldmonitors = this.physics.add.staticGroup();
+
+this.physics.add.collider(player, shieldmonitors, (player, _shieldmonitors) =>
+    {
+        if ((player.body.touching.up && _shieldmonitors.body.touching.down || player.body.onFloor() && cursors.down.isDown || Boost) && !gameOver)
+            {
+                this.cameras.main.shake(200, 0.002);
+                this.sound.play('poof');
+                this.flyBoost.copyPosition(_shieldmonitors).play('fly_boost');
+                _shieldmonitors.destroy();
+
+                this.time.delayedCall(600, () =>
+                {
+                    this.sound.play('shield')
+                    Shield = true
+                    SillyJump = true
+                });
+            }
+    });
+this.physics.add.collider(bombs, shieldmonitors, null, () => { return Ghostmusic == false});
+this.physics.add.collider(stars, shieldmonitors, null, () => { return Ghostmusic == false});
 
 bruh_screen = this.add.image(750, 300, 'bruh').setVisible(false);
 
@@ -2221,12 +2332,13 @@ function update(){
     Phaser.Display.Align.In.Center(this.upBoost, player)
     Phaser.Display.Align.In.Center(this.leftBoost, player)
     Phaser.Display.Align.In.Center(this.rightBoost, player)
+    Phaser.Display.Align.In.Center(this.shield, player)
 
     if(!TempChar1 && !TempChar2 && !TempChar3){
 
         if(key1.isDown){
             this.flyBoost.copyPosition(player).play('fly_boost')
-            if(player.body.touching.down){
+            if(player.body.onFloor()){
                 player.setVelocityY(-100)
             }
             if(!this.tempSwap.isPlaying){
@@ -2237,7 +2349,7 @@ function update(){
             Char3 = false
         }
         else if(key2.isDown){
-            if(player.body.touching.down){
+            if(player.body.onFloor()){
                 player.setVelocityY(-100)
             }
             this.flyBoost.copyPosition(player).play('fly_boost')
@@ -2249,7 +2361,7 @@ function update(){
             Char3 = false
         }
         else if(key3.isDown){
-            if(player.body.touching.down){
+            if(player.body.onFloor()){
                 player.setVelocityY(-100)
             }
             this.flyBoost.copyPosition(player).play('fly_boost')
@@ -2283,8 +2395,40 @@ if(Char1 || TempChar1){
 
     player.setMaxVelocity(600, 5000)
     player.body.setGravityX(0);
-   
-        if(cursors.right.isDown && !cursors.down.isDown && !keyD.isDown && player.body.touching.down && !cursors.left.isDown){
+
+    if(shieldCooldown){
+        if(player.body.velocity.x >= 1){
+            player.anims.play('hurt_right')
+        }
+        else if(player.body.velocity.x <= -1){
+            player.anims.play('hurt_left')
+        }
+
+        if(player.body.velocity.x <= -1){
+            player.setVelocityX(-200)
+        }
+        else if(player.body.velocity.x >= 1){
+            player.setVelocityX(200)
+        }
+        else if(player.body.velocity.x == 0){
+            var RandomDirection = Phaser.Math.Between(0, 1);
+
+            if (RandomDirection = 0){
+                player.setVelocityX(200)
+            }
+            else if (RandomDirection = 1){
+                player.setVelocityX(-200)
+            }
+        }
+
+        if(SillyJump){
+            player.body.setVelocityY(-400)
+            SillyJump = false
+        }
+        
+    }
+    else if (!shieldCooldown){
+        if(cursors.right.isDown && !cursors.down.isDown && !keyD.isDown && player.body.onFloor() && !cursors.left.isDown){
         if(player.body.velocity.x >= -600 && player.body.velocity.x <= -161){
             if(!Rain){
                 player.setAccelerationX(600);
@@ -2341,7 +2485,7 @@ if(Char1 || TempChar1){
             player.anims.play('leftturnskidd', true);
         };
 
-    }else if(cursors.left.isDown && !cursors.down.isDown && !keyD.isDown && player.body.touching.down && !cursors.right.isDown){
+    }else if(cursors.left.isDown && !cursors.down.isDown && !keyD.isDown && player.body.onFloor() && !cursors.right.isDown){
         if(player.body.velocity.x <= 600 && player.body.velocity.x >= 161){
             if(!Rain){
                 player.setAccelerationX(-600);
@@ -2397,17 +2541,17 @@ if(Char1 || TempChar1){
             player.anims.play('rightturnskidd', true);
         };
   
-    } else if(cursors.right.isDown && cursors.down.isDown && player.body.touching.down){
+    } else if(cursors.right.isDown && cursors.down.isDown && player.body.onFloor()){
         player.setVelocityX(0);
         player.setVelocityX(80);
         player.anims.play('right_crouch', true);   
 
-    } else if(cursors.left.isDown && cursors.down.isDown && player.body.touching.down){
+    } else if(cursors.left.isDown && cursors.down.isDown && player.body.onFloor()){
         player.setVelocityX(0);
         player.setVelocityX(-80);
         player.anims.play('left_crouch', true);   
 
-    } else if (cursors.left.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.touching.down){
+    } else if (cursors.left.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.onFloor()){
         if(player.body.velocity.y <= -2 && !Flymusic){
             player.anims.play('jumpleft', true);
         }
@@ -2425,7 +2569,7 @@ if(Char1 || TempChar1){
             player.setAccelerationX(-600);   
         };
     
-    } else if(cursors.right.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.touching.down){
+    } else if(cursors.right.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.onFloor()){
 
         if(player.body.velocity.y <= -2 && !Flymusic){
             player.anims.play('jumpright', true);
@@ -2445,7 +2589,7 @@ if(Char1 || TempChar1){
         };
 
         
-    } else if(!cursors.down.isDown && !keyA.isDown && !cursors.space.isDown && !player.body.touching.down){
+    } else if(!cursors.down.isDown && !keyA.isDown && !cursors.space.isDown && !player.body.onFloor()){
         if(player.body.velocity.y <= -2 && !Flymusic){
             player.anims.play('jumpfront', true);
         }
@@ -2461,17 +2605,17 @@ if(Char1 || TempChar1){
         };
         player.setAccelerationX(0);
 
-    } else if(keyA.isDown && !player.body.touching.down){
+    } else if(keyA.isDown && !player.body.onFloor()){
         player.anims.play('superfall', true);
         player.setVelocityY (900);
         player.setAccelerationX(0);
 
-    }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown && cursors.down.isDown){
+    }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown && cursors.down.isDown){
         player.setVelocityX(0);
         player.setAccelerationX(0);
         player.anims.play('crouch', true);
 
-    }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown){
+    }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown){
         player.setSize(32, 51)
         if(player.body.velocity.x <= 600 && player.body.velocity.x >= 161){
             if(!Rain){
@@ -2525,28 +2669,29 @@ if(Char1 || TempChar1){
 
     }
 
-    if((keyD.isDown || cursors.up.isDown) && player.body.touching.down && !gameOver){
+    if((keyD.isDown || cursors.up.isDown) && player.body.onFloor() && !gameOver){
         player.setVelocityY(-490);
         this.jumpSFX.play();
         this.flyBoost.copyPosition(player).play('fly_boost');
 
     }
 
-    else if((keyD.isDown || cursors.up.isDown) && !player.body.touching.down && !gameOver && Flymusic && player.body.velocity.y > 200){
+    else if((keyD.isDown || cursors.up.isDown) && !player.body.onFloor() && !gameOver && Flymusic && player.body.velocity.y > 200){
         player.setVelocityY(-500);
         this.flyBoost.copyPosition(player).play('fly_boost');
         this.airjumpSFX.play();
 
     };
-    if(!player.body.touching.down && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !Flymusic){
+    if(!player.body.onFloor() && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !Flymusic){
         player.setAccelerationY(900)
     }
-    else if(!player.body.touching.down && (keyD.isDown || cursors.up.isDown) && !gameOver){
+    else if(!player.body.onFloor() && (keyD.isDown || cursors.up.isDown) && !gameOver){
         player.setAccelerationY(0)
     }
-    else if(player.body.touching.down && !gameOver){
+    else if(player.body.onFloor() && !gameOver){
         player.setAccelerationY(0)
 
+    }
     }
 
     }
@@ -2561,7 +2706,7 @@ else if(Metalmusic && !gameOver){
         player.body.setGravityX(100)
     }
     
-    if(cursors.right.isDown && !cursors.down.isDown && !keyD.isDown && player.body.touching.down && !cursors.left.isDown){
+    if(cursors.right.isDown && !cursors.down.isDown && !keyD.isDown && player.body.onFloor() && !cursors.left.isDown){
         if(player.body.velocity.x >= -400 && player.body.velocity.x <= -121){
             player.setAccelerationX(900);
             player.setAccelerationY(0);
@@ -2609,7 +2754,7 @@ else if(Metalmusic && !gameOver){
             player.anims.play('leftturnskidd_m', true);
         };
 
-    }else if(cursors.left.isDown && !cursors.down.isDown && !keyD.isDown && player.body.touching.down && !cursors.right.isDown){
+    }else if(cursors.left.isDown && !cursors.down.isDown && !keyD.isDown && player.body.onFloor() && !cursors.right.isDown){
         if(player.body.velocity.x <= 400 && player.body.velocity.x >= 121){
             player.setAccelerationX(-900);
             player.setAccelerationY(0);
@@ -2657,15 +2802,15 @@ else if(Metalmusic && !gameOver){
             player.anims.play('rightturnskidd_m', true);
         };
   
-    } else if(cursors.right.isDown && cursors.down.isDown && player.body.touching.down){
+    } else if(cursors.right.isDown && cursors.down.isDown && player.body.onFloor()){
         player.setVelocityX(80);
         player.anims.play('right_crouch_m', true);   
 
-    } else if(cursors.left.isDown && cursors.down.isDown && player.body.touching.down){
+    } else if(cursors.left.isDown && cursors.down.isDown && player.body.onFloor()){
         player.setVelocityX(-80);
         player.anims.play('left_crouch_m', true);   
 
-    } else if (cursors.left.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.touching.down){
+    } else if (cursors.left.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.onFloor()){
         if(player.body.velocity.y <= -2 && !Flymusic){
             player.anims.play('jumpleft_m', true);
         }
@@ -2683,7 +2828,7 @@ else if(Metalmusic && !gameOver){
             player.setAccelerationX(-400);   
         };
     
-    } else if(cursors.right.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.touching.down){
+    } else if(cursors.right.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.onFloor()){
 
         if(player.body.velocity.y <= -2 && !Flymusic){
             player.anims.play('jumpright_m', true);
@@ -2703,7 +2848,7 @@ else if(Metalmusic && !gameOver){
         };
 
         
-    } else if(!cursors.down.isDown && !keyA.isDown && !cursors.space.isDown && !player.body.touching.down){
+    } else if(!cursors.down.isDown && !keyA.isDown && !cursors.space.isDown && !player.body.onFloor()){
         if(player.body.velocity.y <= -2 && !Flymusic){
             player.anims.play('jumpfront_m', true);
         }
@@ -2719,17 +2864,17 @@ else if(Metalmusic && !gameOver){
         };
         player.setAccelerationX(0);
 
-    } else if(keyA.isDown && !player.body.touching.down){
+    } else if(keyA.isDown && !player.body.onFloor()){
         player.anims.play('superfall_m', true);
         player.setVelocityY (900);
         player.setAccelerationX(0);
 
-    }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown && cursors.down.isDown){
+    }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown && cursors.down.isDown){
         player.setVelocityX(0);
         player.setAccelerationX(0);
         player.anims.play('crouch_m', true);
 
-    }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown){
+    }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown){
 
         if(player.body.velocity.x <= 400 && player.body.velocity.x >= 121){
             player.setAccelerationX(-900);
@@ -2774,27 +2919,27 @@ else if(Metalmusic && !gameOver){
     }
 
 
-    if((keyD.isDown || cursors.up.isDown) && player.body.touching.down && !gameOver){
+    if((keyD.isDown || cursors.up.isDown) && player.body.onFloor() && !gameOver){
         player.setVelocityY(-500);
         this.jumpMSFX.play();
         this.flyBoost.copyPosition(player).play('fly_boost');
 
     }
 
-    else if((keyD.isDown || cursors.up.isDown) && !player.body.touching.down && !gameOver && Flymusic && player.body.velocity.y > 200){
+    else if((keyD.isDown || cursors.up.isDown) && !player.body.onFloor() && !gameOver && Flymusic && player.body.velocity.y > 200){
         player.setVelocityY(-450);
         this.flyBoost.copyPosition(player).play('fly_boost');
         this.airjumpMSFX.play();
 
     };
 
-    if(!player.body.touching.down && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !Flymusic){
+    if(!player.body.onFloor() && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !Flymusic){
         player.setAccelerationY(1200)
     }
-    else if(!player.body.touching.down && (keyD.isDown || cursors.up.isDown) && !gameOver){
+    else if(!player.body.onFloor() && (keyD.isDown || cursors.up.isDown) && !gameOver){
         player.setAccelerationY(0)
     }
-    else if(player.body.touching.down && !gameOver){
+    else if(player.body.onFloor() && !gameOver){
         player.setAccelerationY(0)
     }
 };
@@ -2818,13 +2963,44 @@ else if (Char2 || TempChar2){
         player.setVelocityY(0);
         player.anims.play('goob_death', true);
     }
+    if(shieldCooldown){
+        if(player.body.velocity.x >= 1){
+            player.anims.play('goob_hurt_right')
+        }
+        else if(player.body.velocity.x <= -1){
+            player.anims.play('goob_hurt_left')
+        }
 
-    else if(!Metalmusic && !gameOver){
+        if(player.body.velocity.x <= -1){
+            player.setVelocityX(-200)
+        }
+        else if(player.body.velocity.x >= 1){
+            player.setVelocityX(200)
+        }
+        else if(player.body.velocity.x == 0){
+            var RandomDirection = Phaser.Math.Between(0, 1);
+
+            if (RandomDirection = 0){
+                player.setVelocityX(200)
+            }
+            else if (RandomDirection = 1){
+                player.setVelocityX(-200)
+            }
+        }
+
+        if(SillyJump){
+            player.body.setVelocityY(-400)
+            SillyJump = false
+        }
+        
+    }
+    else if (!shieldCooldown){
+    if(!Metalmusic && !gameOver){
 
         player.setMaxVelocity(600, 5000)
         player.body.setGravityX(0);
        
-            if(cursors.right.isDown && !cursors.down.isDown && !keyD.isDown && player.body.touching.down && !cursors.left.isDown){
+            if(cursors.right.isDown && !cursors.down.isDown && !keyD.isDown && player.body.onFloor() && !cursors.left.isDown){
             if(player.body.velocity.x >= -600 && player.body.velocity.x <= -161){
                 if(!Rain){
                     player.setAccelerationX(600);
@@ -2879,7 +3055,7 @@ else if (Char2 || TempChar2){
                 player.anims.play('goob_leftturnskidd', true);
             };
     
-        }else if(cursors.left.isDown && !cursors.down.isDown && !keyD.isDown && player.body.touching.down && !cursors.right.isDown){
+        }else if(cursors.left.isDown && !cursors.down.isDown && !keyD.isDown && player.body.onFloor() && !cursors.right.isDown){
             if(player.body.velocity.x <= 600 && player.body.velocity.x >= 161){
                 if(!Rain){
                     player.setAccelerationX(-600);
@@ -2935,15 +3111,15 @@ else if (Char2 || TempChar2){
                 player.anims.play('goob_rightturnskidd', true);
             };
       
-        } else if(cursors.right.isDown && cursors.down.isDown && player.body.touching.down){
+        } else if(cursors.right.isDown && cursors.down.isDown && player.body.onFloor()){
             player.setVelocityX(80);
             player.anims.play('goob_right_crouch', true);   
     
-        } else if(cursors.left.isDown && cursors.down.isDown && player.body.touching.down){
+        } else if(cursors.left.isDown && cursors.down.isDown && player.body.onFloor()){
             player.setVelocityX(-80);
             player.anims.play('goob_left_crouch', true);   
     
-        } else if (cursors.left.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.touching.down){
+        } else if (cursors.left.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.onFloor()){
             if(player.body.velocity.y <= -2){
                 player.anims.play('goob_jumpleft', true);
             }
@@ -2958,7 +3134,7 @@ else if (Char2 || TempChar2){
                 player.setAccelerationX(-600);   
             };
         
-        } else if(cursors.right.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.touching.down){
+        } else if(cursors.right.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.onFloor()){
     
             if(player.body.velocity.y <= -2 ){
                 player.anims.play('goob_jumpright', true);
@@ -2975,7 +3151,7 @@ else if (Char2 || TempChar2){
             };
     
             
-        } else if(!cursors.down.isDown && !keyA.isDown && !cursors.space.isDown && !player.body.touching.down){
+        } else if(!cursors.down.isDown && !keyA.isDown && !cursors.space.isDown && !player.body.onFloor()){
             if(player.body.velocity.y <= -2){
                 player.anims.play('goob_jumpfront', true);
             }
@@ -2988,7 +3164,7 @@ else if (Char2 || TempChar2){
             };
             player.setAccelerationX(0);
     
-        } else if(keyA.isDown && !player.body.touching.down && !Cooldown){
+        } else if(keyA.isDown && !player.body.onFloor() && !Cooldown){
                 if(player.body.velocity.x <= 50 && player.body.velocity.x >= -50){
                     player.setVelocityX(Phaser.Math.Between(160, -160))
                 }
@@ -3020,12 +3196,12 @@ else if (Char2 || TempChar2){
                     this.floatSFX.play();
                 }
     
-        }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown && cursors.down.isDown){
+        }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown && cursors.down.isDown){
             player.setVelocityX(0);
             player.setAccelerationX(0);
             player.anims.play('goob_crouch', true);
     
-        }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown){
+        }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown){
     
             if(player.body.velocity.x <= 600 && player.body.velocity.x >= 161){
                 if(!Rain){
@@ -3076,31 +3252,32 @@ else if (Char2 || TempChar2){
     
         }
     
-        if((keyD.isDown || cursors.up.isDown) && player.body.touching.down && !gameOver){
+        if((keyD.isDown || cursors.up.isDown) && player.body.onFloor() && !gameOver){
             player.setVelocityY(-490);
             this.jumpSFX.play();
             this.flyBoost.copyPosition(player).play('fly_boost');
     
         }
     
-        else if((keyD.isDown || cursors.up.isDown) && !player.body.touching.down && !gameOver && Flymusic && player.body.velocity.y > 200){
+        else if((keyD.isDown || cursors.up.isDown) && !player.body.onFloor() && !gameOver && Flymusic && player.body.velocity.y > 200){
             player.setVelocityY(-300);
             this.flyBoost.copyPosition(player).play('fly_boost');
             this.airjumpSFX.play();
     
         };
-        if(!player.body.touching.down && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !keyA.isDown){
+        if(!player.body.onFloor() && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !keyA.isDown){
             player.setAccelerationY(900)
             this.floatSFX.pause();
         }
-        else if(!player.body.touching.down && (keyD.isDown || cursors.up.isDown) && !gameOver && !keyA.isDown){
+        else if(!player.body.onFloor() && (keyD.isDown || cursors.up.isDown) && !gameOver && !keyA.isDown){
             player.setAccelerationY(0)
             this.floatSFX.pause();
         }
-        else if(player.body.touching.down && !gameOver && !keyA.isDown){
+        else if(player.body.onFloor() && !gameOver && !keyA.isDown){
             player.setAccelerationY(0)
             this.floatSFX.pause();
         }
+    
     }
     else if(Metalmusic && !gameOver){
 
@@ -3112,7 +3289,7 @@ else if (Char2 || TempChar2){
             player.body.setGravityX(100)
         }
        
-            if(cursors.right.isDown && !cursors.down.isDown && !keyD.isDown && player.body.touching.down && !cursors.left.isDown){
+            if(cursors.right.isDown && !cursors.down.isDown && !keyD.isDown && player.body.onFloor() && !cursors.left.isDown){
             if(player.body.velocity.x >= -400 && player.body.velocity.x <= -121){
 
                 player.setAccelerationX(900);
@@ -3161,7 +3338,7 @@ else if (Char2 || TempChar2){
                 player.anims.play('goob_leftturnskidd_m', true);
             };
     
-        }else if(cursors.left.isDown && !cursors.down.isDown && !keyD.isDown && player.body.touching.down && !cursors.right.isDown){
+        }else if(cursors.left.isDown && !cursors.down.isDown && !keyD.isDown && player.body.onFloor() && !cursors.right.isDown){
             if(player.body.velocity.x <= 400 && player.body.velocity.x >= 121){
                 player.setAccelerationX(-900);
 
@@ -3209,15 +3386,15 @@ else if (Char2 || TempChar2){
                 player.anims.play('goob_rightturnskidd_m', true);
             };
       
-        } else if(cursors.right.isDown && cursors.down.isDown && player.body.touching.down){
+        } else if(cursors.right.isDown && cursors.down.isDown && player.body.onFloor()){
             player.setVelocityX(80);
             player.anims.play('goob_right_crouch_m', true);   
     
-        } else if(cursors.left.isDown && cursors.down.isDown && player.body.touching.down){
+        } else if(cursors.left.isDown && cursors.down.isDown && player.body.onFloor()){
             player.setVelocityX(-80);
             player.anims.play('goob_left_crouch_m', true);   
     
-        } else if (cursors.left.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.touching.down){
+        } else if (cursors.left.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.onFloor()){
             if(player.body.velocity.y <= -2){
                 player.anims.play('goob_jumpleft_m', true);
             }
@@ -3232,7 +3409,7 @@ else if (Char2 || TempChar2){
                 player.setAccelerationX(-400);   
             };
         
-        } else if(cursors.right.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.touching.down){
+        } else if(cursors.right.isDown && !cursors.down.isDown && !keyA.isDown && !player.body.onFloor()){
     
             if(player.body.velocity.y <= -2 ){
                 player.anims.play('goob_jumpright_m', true);
@@ -3249,7 +3426,7 @@ else if (Char2 || TempChar2){
             };
     
             
-        } else if(!cursors.down.isDown && !keyA.isDown && !cursors.space.isDown && !player.body.touching.down){
+        } else if(!cursors.down.isDown && !keyA.isDown && !cursors.space.isDown && !player.body.onFloor()){
             if(player.body.velocity.y <= -2){
                 player.anims.play('goob_jumpfront_m', true);
             }
@@ -3262,7 +3439,7 @@ else if (Char2 || TempChar2){
             };
             player.setAccelerationX(0);
     
-        } else if(keyA.isDown && !player.body.touching.down && !Cooldown){
+        } else if(keyA.isDown && !player.body.onFloor() && !Cooldown){
                 if(player.body.velocity.x <= 50 && player.body.velocity.x >= -50){
                     player.setVelocityX(Phaser.Math.Between(160, -160))
                 }
@@ -3294,12 +3471,12 @@ else if (Char2 || TempChar2){
                 }
 
     
-        }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown && cursors.down.isDown){
+        }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown && cursors.down.isDown){
             player.setVelocityX(0);
             player.setAccelerationX(0);
             player.anims.play('goob_crouch_m', true);
     
-        }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown){
+        }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown){
     
             if(player.body.velocity.x <= 400 && player.body.velocity.x >= 121){
                 player.setAccelerationX(-900);
@@ -3343,28 +3520,28 @@ else if (Char2 || TempChar2){
     
         }
     
-        if((keyD.isDown || cursors.up.isDown) && player.body.touching.down && !gameOver){
+        if((keyD.isDown || cursors.up.isDown) && player.body.onFloor() && !gameOver){
             player.setVelocityY(-500);
             this.jumpMSFX.play();
             this.flyBoost.copyPosition(player).play('fly_boost');
     
         }
     
-        else if((keyD.isDown || cursors.up.isDown) && !player.body.touching.down && !gameOver && Flymusic && player.body.velocity.y > 200){
+        else if((keyD.isDown || cursors.up.isDown) && !player.body.onFloor() && !gameOver && Flymusic && player.body.velocity.y > 200){
             player.setVelocityY(-300);
             this.flyBoost.copyPosition(player).play('fly_boost');
             this.airjumpMSFX.play();
     
         };
-        if(!player.body.touching.down && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !keyA.isDown){
+        if(!player.body.onFloor() && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !keyA.isDown){
             player.setAccelerationY(1200)
             this.floatMSFX.pause();
         }
-        else if(!player.body.touching.down && (keyD.isDown || cursors.up.isDown) && !gameOver && !keyA.isDown){
+        else if(!player.body.onFloor() && (keyD.isDown || cursors.up.isDown) && !gameOver && !keyA.isDown){
             player.setAccelerationY(0)
             this.floatMSFX.pause();
         }
-        else if(player.body.touching.down && !gameOver && !keyA.isDown){
+        else if(player.body.onFloor() && !gameOver && !keyA.isDown){
             player.setAccelerationY(0)
             this.floatMSFX.pause();
         }
@@ -3374,6 +3551,7 @@ else if (Char2 || TempChar2){
     }
     else if(cursors.down.isDown){
         player.setSize(28, 36)
+    }
     }
 }
 
@@ -3388,13 +3566,44 @@ else if (Char3 || TempChar3){
         this.leftBoost.setVisible(false);
         this.upBoost.setVisible(false);
     }
+    if(shieldCooldown){
+        if(player.body.velocity.x >= 1){
+            player.anims.play('ende_hurt_right')
+        }
+        else if(player.body.velocity.x <= -1){
+            player.anims.play('ende_hurt_left')
+        }
 
-    else if(!Metalmusic && !gameOver){
+        if(player.body.velocity.x <= -1){
+            player.setVelocityX(-200)
+        }
+        else if(player.body.velocity.x >= 1){
+            player.setVelocityX(200)
+        }
+        else if(player.body.velocity.x == 0){
+            var RandomDirection = Phaser.Math.Between(0, 1);
+
+            if (RandomDirection = 0){
+                player.setVelocityX(200)
+            }
+            else if (RandomDirection = 1){
+                player.setVelocityX(-200)
+            }
+        }
+
+        if(SillyJump){
+            player.body.setVelocityY(-400)
+            SillyJump = false
+        }
+        
+    }
+    else if (!shieldCooldown){
+    if(!Metalmusic && !gameOver){
 
         player.setMaxVelocity(600, 1000)
         player.body.setGravityX(0);
        
-            if(cursors.right.isDown && !keyD.isDown && player.body.touching.down && !cursors.left.isDown){
+            if(cursors.right.isDown && !keyD.isDown && player.body.onFloor() && !cursors.left.isDown){
             if(player.body.velocity.x >= -600 && player.body.velocity.x <= -161){
                 if(!Rain){
                     player.setAccelerationX(800);
@@ -3446,7 +3655,7 @@ else if (Char3 || TempChar3){
                 player.anims.play('ende_leftturnskidd', true);
             };
     
-        }else if(cursors.left.isDown && !keyD.isDown && player.body.touching.down && !cursors.right.isDown){
+        }else if(cursors.left.isDown && !keyD.isDown && player.body.onFloor() && !cursors.right.isDown){
             if(player.body.velocity.x <= 600 && player.body.velocity.x >= 161){
                 if(!Rain){
                     player.setAccelerationX(-800);
@@ -3498,7 +3707,7 @@ else if (Char3 || TempChar3){
                 player.anims.play('ende_rightturnskidd', true);
             };
       
-        } else if (cursors.left.isDown && !keyA.isDown && !player.body.touching.down){
+        } else if (cursors.left.isDown && !keyA.isDown && !player.body.onFloor()){
 
             if(!Flymusic){
                 if(player.body.velocity.y <= -2){
@@ -3526,7 +3735,7 @@ else if (Char3 || TempChar3){
                 player.setAccelerationX(-600);   
             };
         
-        } else if(cursors.right.isDown && !keyA.isDown && !player.body.touching.down){
+        } else if(cursors.right.isDown && !keyA.isDown && !player.body.onFloor()){
     
             if(!Flymusic){
                 if(player.body.velocity.y <= -2){
@@ -3555,7 +3764,7 @@ else if (Char3 || TempChar3){
             };
     
             
-        } else if(!keyA.isDown && !cursors.space.isDown && !player.body.touching.down){
+        } else if(!keyA.isDown && !cursors.space.isDown && !player.body.onFloor()){
             if(!Flymusic){
                 if(player.body.velocity.y <= -2){
                     player.anims.play('ende_jumpfront', true);
@@ -3584,7 +3793,7 @@ else if (Char3 || TempChar3){
 
         
     
-        } else if(keyA.isDown && !player.body.touching.down && !Cooldown){
+        } else if(keyA.isDown && !player.body.onFloor() && !Cooldown){
 
                 Boost = true
 
@@ -3643,7 +3852,7 @@ else if (Char3 || TempChar3){
 
 
             
-        }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown){
+        }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown){
     
             if(player.body.velocity.x <= 600 && player.body.velocity.x >= 161){
                 if(!Rain){
@@ -3694,28 +3903,28 @@ else if (Char3 || TempChar3){
     
         }
     
-        if((keyD.isDown || cursors.up.isDown) && player.body.touching.down && !gameOver){
+        if((keyD.isDown || cursors.up.isDown) && player.body.onFloor() && !gameOver){
             player.setVelocityY(-490);
             this.jumpSFX.play();
             this.flyBoost.copyPosition(player).play('fly_boost');
     
         }
     
-        else if((keyD.isDown || cursors.up.isDown) && !player.body.touching.down && !gameOver && Flymusic && player.body.velocity.y > 1 && !Cooldown){
+        else if((keyD.isDown || cursors.up.isDown) && !player.body.onFloor() && !gameOver && Flymusic && player.body.velocity.y > 1 && !Cooldown){
             player.setVelocityY(-300);
             this.flyBoost.copyPosition(player).play('fly_boost');
             this.airjumpSFX.play();
     
         };
-        if(!player.body.touching.down && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !keyA.isDown && !Cooldown){
+        if(!player.body.onFloor() && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !keyA.isDown && !Cooldown){
             player.setAccelerationY(900)
             this.floatSFX.pause();
         }
-        else if(!player.body.touching.down && (keyD.isDown || cursors.up.isDown) && !gameOver && !keyA.isDown || Cooldown){
+        else if(!player.body.onFloor() && (keyD.isDown || cursors.up.isDown) && !gameOver && !keyA.isDown || Cooldown){
             player.setAccelerationY(0)
             this.floatSFX.pause();
         }
-        else if(player.body.touching.down && !gameOver && !keyA.isDown){
+        else if(player.body.onFloor() && !gameOver && !keyA.isDown){
             player.setAccelerationY(0)
             this.floatSFX.pause();
         }
@@ -3742,16 +3951,16 @@ else if (Char3 || TempChar3){
             player.anims.play('ende_death', true);
         
         }
+        
 
-
+    
     }
-
     else if(Metalmusic && !gameOver){
 
         player.setMaxVelocity(600, 1000)
         player.body.setGravityX(0);
        
-            if(cursors.right.isDown && !keyD.isDown && player.body.touching.down && !cursors.left.isDown){
+            if(cursors.right.isDown && !keyD.isDown && player.body.onFloor() && !cursors.left.isDown){
             if(player.body.velocity.x >= -600 && player.body.velocity.x <= -161){
                 if(!Rain){
                     player.setAccelerationX(800);
@@ -3803,7 +4012,7 @@ else if (Char3 || TempChar3){
                 player.anims.play('ende_leftturnskidd_m', true);
             };
     
-        }else if(cursors.left.isDown && !keyD.isDown && player.body.touching.down && !cursors.right.isDown){
+        }else if(cursors.left.isDown && !keyD.isDown && player.body.onFloor() && !cursors.right.isDown){
             if(player.body.velocity.x <= 600 && player.body.velocity.x >= 161){
                 if(!Rain){
                     player.setAccelerationX(-800);
@@ -3855,7 +4064,7 @@ else if (Char3 || TempChar3){
                 player.anims.play('ende_rightturnskidd_m', true);
             };
       
-        } else if (cursors.left.isDown && !keyA.isDown && !player.body.touching.down){
+        } else if (cursors.left.isDown && !keyA.isDown && !player.body.onFloor()){
 
             if(!Flymusic){
                 if(player.body.velocity.y <= -2){
@@ -3883,7 +4092,7 @@ else if (Char3 || TempChar3){
                 player.setAccelerationX(-600);   
             };
         
-        } else if(cursors.right.isDown && !keyA.isDown && !player.body.touching.down){
+        } else if(cursors.right.isDown && !keyA.isDown && !player.body.onFloor()){
     
             if(!Flymusic){
                 if(player.body.velocity.y <= -2){
@@ -3912,7 +4121,7 @@ else if (Char3 || TempChar3){
             };
     
             
-        } else if(!keyA.isDown && !cursors.space.isDown && !player.body.touching.down){
+        } else if(!keyA.isDown && !cursors.space.isDown && !player.body.onFloor()){
             if(!Flymusic){
                 if(player.body.velocity.y <= -2){
                     player.anims.play('ende_jumpfront_m', true);
@@ -3941,7 +4150,7 @@ else if (Char3 || TempChar3){
 
         
     
-        } else if(keyA.isDown && !player.body.touching.down && !Cooldown){
+        } else if(keyA.isDown && !player.body.onFloor() && !Cooldown){
 
                 Boost = true
 
@@ -4000,7 +4209,7 @@ else if (Char3 || TempChar3){
 
 
             
-        }else if(player.body.touching.down && !cursors.left.isDown && !cursors.right.isDown){
+        }else if(player.body.onFloor() && !cursors.left.isDown && !cursors.right.isDown){
     
             if(player.body.velocity.x <= 600 && player.body.velocity.x >= 161){
                 if(!Rain){
@@ -4051,28 +4260,28 @@ else if (Char3 || TempChar3){
     
         }
     
-        if((keyD.isDown || cursors.up.isDown) && player.body.touching.down && !gameOver){
+        if((keyD.isDown || cursors.up.isDown) && player.body.onFloor() && !gameOver){
             player.setVelocityY(-490);
             this.jumpMSFX.play();
             this.flyBoost.copyPosition(player).play('fly_boost');
     
         }
     
-        else if((keyD.isDown || cursors.up.isDown) && !player.body.touching.down && !gameOver && Flymusic && player.body.velocity.y > 1 && !Cooldown){
+        else if((keyD.isDown || cursors.up.isDown) && !player.body.onFloor() && !gameOver && Flymusic && player.body.velocity.y > 1 && !Cooldown){
             player.setVelocityY(-300);
             this.flyBoost.copyPosition(player).play('fly_boost');
             this.airjumpMSFX.play();
     
         };
-        if(!player.body.touching.down && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !keyA.isDown && !Cooldown){
+        if(!player.body.onFloor() && (!(keyD.isDown || cursors.up.isDown) || player.body.velocity.y >= 10) && !gameOver && !keyA.isDown && !Cooldown){
             player.setAccelerationY(900)
             this.floatSFX.pause();
         }
-        else if(!player.body.touching.down && (keyD.isDown || cursors.up.isDown) && !gameOver && !keyA.isDown || Cooldown){
+        else if(!player.body.onFloor() && (keyD.isDown || cursors.up.isDown) && !gameOver && !keyA.isDown || Cooldown){
             player.setAccelerationY(0)
             this.floatSFX.pause();
         }
-        else if(player.body.touching.down && !gameOver && !keyA.isDown){
+        else if(player.body.onFloor() && !gameOver && !keyA.isDown){
             player.setAccelerationY(0)
             this.floatSFX.pause();
         }
@@ -4102,11 +4311,17 @@ else if (Char3 || TempChar3){
 
 
     }
-
+    }
 }
 
-if(player.body.touching.down){
+if(player.body.onFloor()){
     Cooldown = false
+}
+
+
+if (player.body.onFloor() && shieldCooldown){
+    shieldCooldown = false
+    SillyJump = false
 }
 
     if (!this.noontheme.isPlaying && !this.noontheme.intro.isPlaying && !this.nighttheme.isPlaying && !this.nighttheme.intro.isPlaying && 
@@ -4327,7 +4542,21 @@ if(player.body.touching.down){
     this.physics.world.wrap(this.air2, 0);
     this.air2.setVelocity(-1000, -500);
 
+    if(keyP.isDown){
+        if (!Shield){
+            Shield = true
+        }
+        else if (Shield){
+            Shield = false
+        }
+    }
 
+    if(Shield){
+        this.shield.anims.play('shield_movement', true).setVisible(true);
+    }
+    else if (!Shield){
+        this.shield.setVisible(false)
+    }
 }
 
     
@@ -4339,7 +4568,7 @@ if(player.body.touching.down){
 function collectStar(player, star){
     star.disableBody(true, true);
 
-    score += 10;
+    score += 100;
     scoreText.setText('Score: '+score);
 
     if(stars.countActive(true) == 0 ){
@@ -4351,7 +4580,7 @@ function collectStar(player, star){
 
         });
 
-        var StarRandom = Phaser.Math.Between(1, 10);
+        var StarRandom = Phaser.Math.Between(1, 15);
 
 
         var Xmetal = Phaser.Math.Between(100, 1400);
@@ -4369,6 +4598,9 @@ function collectStar(player, star){
         var Xchaotix = Phaser.Math.Between(100, 1400);
         var Ychaotix = Phaser.Math.Between(100, 450);
 
+        var Xshield = Phaser.Math.Between(100, 1400);
+        var Yshield = Phaser.Math.Between(100, 450);
+
         if (!Metalmusic && metalboxes.countActive(true) == 0 && 
         (StarRandom == 1 || StarRandom == 2 || StarRandom == 3 || StarRandom == 5 || StarRandom == 7)){
 
@@ -4377,14 +4609,14 @@ function collectStar(player, star){
         };
 
         if (!Ghostmusic && ghostboxes.countActive(true) == 0 && 
-        (StarRandom == 2 || StarRandom == 3 || StarRandom == 4 || StarRandom == 6 || StarRandom == 8)){
+        (StarRandom == 2 || StarRandom == 3 || StarRandom == 4 || StarRandom == 6 || StarRandom == 15)){
 
             var ghostbox = ghostboxes.create(Xghost, Yghost, 'ghostic_box');
             ghostbox.anims.play('ghosticblock', true);
         };
 
         if (!Flymusic && flyboxes.countActive(true) == 0 &&
-        (StarRandom == 1 || StarRandom == 3 || StarRandom == 6 || StarRandom == 9)){
+        (StarRandom == 1 || StarRandom == 3 || StarRandom == 11 || StarRandom == 12)){
 
             var flybox = flyboxes.create(Xfly, Yfly, 'flystic_box');
             flybox.anims.play('flysticblock', true);
@@ -4394,7 +4626,14 @@ function collectStar(player, star){
         (StarRandom == 3 || StarRandom == 1 || StarRandom == 4)){
 
             var starbox = starboxes.create(Xstar, Ystar, 'starstic_box');
-            starbox.anims.play('starsticblock', true);
+            starbox.anims.play('starsticbox', true);
+        };
+
+        if (!Shield && !shieldCheck && (!Metalmusic || !Starmusic) && shieldmonitors.countActive(true) == 0 && 
+        StarRandom >= 3 && StarRandom <= 13){
+
+            var shieldmonitor = shieldmonitors.create(Xshield, Yshield, 'monitor_shield');
+            shieldmonitor.anims.play('monitor_shield_anim', true);
         };
 
         if (!TempChar1 && !TempChar2 && !TempChar3 && chaotixboxes.countActive(true) == 0 && 
@@ -4456,16 +4695,33 @@ function collectStar(player, star){
 
 function hitBomb(player, bomb){
 
+
     if(Boost || Metalmusic || Starmusic){
+        this.cameras.main.shake(200, 0.003);
         this.sound.play('hitbomb_sfx');
         if (Starmusic || Flymusic || Metalmusic){
-            score += 50;
+            score += 500;
             scoreText.setText('Score: '+score);
         }
         this.explosion.copyPosition(bomb).play('explode');
         bomb.destroy();
     }
+
+    else if(Shield && !Boost){
+        this.cameras.main.shake(200, 0.003);
+        this.sound.play('hitbomb_sfx');
+        this.explosion.copyPosition(bomb).play('explode');
+        score += 100;
+        scoreText.setText('Score: '+score);
+        bomb.destroy();
+        shieldCooldown = true
+        SillyJump = true
+        Shield = false
+    }
+
     else if(!Boost && !Starmusic && !Metalmusic){
+        this.cameras.main.shake(200, 0.025);
+        this.cameras.main.flash(300);
 
         bomb.anims.play('explode_final', true);
         var PITY = Phaser.Math.Between(1, 3);
